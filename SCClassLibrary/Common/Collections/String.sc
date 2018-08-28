@@ -557,4 +557,59 @@ String[char] : RawArray {
 	parseJSONFile {
 		^this.parseYAMLFile
 	}
+
+	sprintf { arg ... args;
+		var fragments = Array.newClear, fragmentStart = 0;
+		var i = 0;
+		var lastArg = 0;
+		var out = "";
+		while { i < this.size } {
+			if ( this[i] != $% ) {
+				i = i + 1;
+			} {
+				var reMatch, padding;
+				if ( fragmentStart < i ) {
+					fragments = fragments.add(this[fragmentStart..(i-1)]);
+				};
+
+				// skip leading %
+				i = i + 1;
+
+				reMatch = this.findRegexpAt("[0-9]*\\.?[0-9]*", i);
+				if (reMatch.isNil) {
+					padding = [ 0, 6 ]
+				} {
+					padding = reMatch[0].split($.);
+					i = i + reMatch[1];
+				};
+
+				fragments = fragments.add(switch (this[i])
+					{$d} { lastArg = lastArg + 1; args[lastArg - 1].asInt.asString; }
+					{$s} { lastArg = lastArg + 1; args[lastArg - 1].asString; }
+					{$c} { lastArg = lastArg + 1; args[lastArg - 1].asCompileString; }
+					{$x} { lastArg = lastArg + 1; args[lastArg - 1].asHexString; }
+					{$f} { lastArg = lastArg + 1; args[lastArg - 1].asFloat.asStringPrec(padding[1].asInt); }
+					{$%} { $% }
+				);
+
+				i = i + 1;
+				fragmentStart = i;
+
+			};
+
+		};
+
+		if (fragmentStart + 1 < this.size) {
+			fragments = fragments.add(this[fragmentStart..]);
+		};
+
+		fragments.do { |fragment|
+			out = out ++ fragment;
+		};
+		^out;
+	}
+
+	printf { arg ... args;
+		^this.sprintf(*args).post;
+	}
 }

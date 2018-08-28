@@ -118,4 +118,10 @@ TestString : UnitTest {
 		this.assertEquals(result, expected);
 	}
 
+	test_sprintf {
+		var result = "%% %4.5f %d %c %s %x trailing".sprintf(1.0, 45, [1,2], [1,2], 18);
+		var expected = "%    1.00000 45 [ 1, 2 ] [ 1, 2 ] 12 trailing";
+		this.assertEquals(result, expected);
+	}
+
 }
